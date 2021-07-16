@@ -91,29 +91,28 @@ resources:
   node_mongo_port:
     type: OS::Neutron::Port
     properties:
+      security_groups: [{ get_resource: mongo_security_group }]
       network_id: { get_resource: net1 }
       fixed_ips:
-        - subnet_id: { get_resource: net1_subnet }
         - ip_address: "192.168.65.43"
   node1_port:
     type: OS::Neutron::Port
     properties:
       network_id: { get_resource: net1 }
+      security_groups: [{ get_resource: app_security_group }]
       fixed_ips:
-        - subnet_id: { get_resource: net1_subnet }
         - ip_address: "192.168.65.42"
   node2_port:
     type: OS::Neutron::Port
     properties:
       network_id: { get_resource: net1 }
+      security_groups: [{ get_resource: app_security_group }]
       fixed_ips:
-        - subnet_id: { get_resource: net1_subnet }
         - ip_address: "192.168.65.41"
   node_mongo:
     type: OS::Nova::Server
     properties:
       name: node-mongo
-      # security_groups: [{ get_resource: mongo_security_group }]
       image: { get_param: image_id }
       flavor: { get_param: flavor_id_db }
       key_name: { get_param: key_name }
@@ -128,7 +127,6 @@ resources:
     type: OS::Nova::Server
     properties:
       name: node1
-      # security_groups: [{ get_resource: app_security_group }]
       image: { get_param: image_id }
       flavor: { get_param: flavor_id_app }
       key_name: { get_param: key_name }
@@ -142,7 +140,6 @@ resources:
     type: OS::Nova::Server
     properties:
       name: node2
-      # security_groups: [{ get_resource: app_security_group }]
       image: { get_param: image_id }
       flavor: { get_param: flavor_id_app }
       key_name: { get_param: key_name }
@@ -192,7 +189,7 @@ resources:
       subnet: { get_resource: net1_subnet }
       weight: 1
 
-  pool_member_node1:
+  pool_member_node2:
     type: OS::Octavia::PoolMember
     properties:
       address: "192.168.65.41"
