@@ -9,26 +9,26 @@ cd ../authentiq
 sed 's/authentiq-db/192.168.65.43/g' config/config.json
 npm i
 cd /etc/apache2/sites-available
-sudo echo "<VirtualHost *:80>
-    \nServerAdmin info@fumcloud.pro \
-    \nServerName fumcloud.pro \
-    \nProxyRequests Off \
-    \n<Location /> \
-    \n  ProxyPreserveHost On \
-    \n  ProxyPass http://127.0.0.1:3000/ \
-    \n  ProxyPassReverse http://127.0.0.1:3000/ \
-    \n</Location> \
-    \n</VirtualHost>" > fumcloud.pro.conf
 echo "<VirtualHost *:80>
-    \nServerAdmin info@api.fumcloud.pro \
-    \nServerName api.fumcloud.pro \
-    \nProxyRequests Off \
-    \n<Location /> \
-    \n  ProxyPreserveHost On \
-    \n  ProxyPass http://127.0.0.1:2000/ \
-    \n  ProxyPassReverse http://127.0.0.1:2000/ \
-    \n</Location> \
-    \n</VirtualHost>" > api.fumcloud.pro.conf
+ServerAdmin info@fumcloud.pro
+ServerName fumcloud.pro 
+ProxyRequests Off 
+<Location /> 
+  ProxyPreserveHost On 
+  ProxyPass http://127.0.0.1:3000/ 
+  ProxyPassReverse http://127.0.0.1:3000/ 
+</Location> 
+</VirtualHost>" | sudo tee fumcloud.pro.conf
+echo "<VirtualHost *:80>
+ServerAdmin info@api.fumcloud.pro 
+ServerName api.fumcloud.pro 
+ProxyRequests Off 
+<Location /> 
+  ProxyPreserveHost On 
+  ProxyPass http://127.0.0.1:2000/ 
+  ProxyPassReverse http://127.0.0.1:2000/ 
+</Location> 
+</VirtualHost>" | sudo tee api.fumcloud.pro.conf
 sudo a2enmod proxy
 sudo a2enmod proxy_http
 sudo a2ensite fumcloud.pro.conf
@@ -36,22 +36,22 @@ sudo a2ensite api.fumcloud.pro.conf
 sudo service apache2 restart
 
 cd /etc/systemd/system
-sudo echo "[Unit] \
-           \n Description=system-info service. \
-           \n[Service] \
-           \n Type=simple \
-           \n WorkingDirectory=/home/ubuntu/system-information \
-           \n ExecStart=node ./server.js \
-           \n[Install] \
-           \n WantedBy=multi-user.target" > system-info.service
-sudo echo "[Unit] \
-           \n Description=authentiq service. \
-           \n[Service] \
-           \n Type=simple \
-           \n WorkingDirectory=/home/ubuntu/authentiq \
-           \n ExecStart=npm run dev \
-           \n[Install] \
-           \n WantedBy=multi-user.target" > authentiq.service
+echo "[Unit]
+ Description=system-info service. 
+[Service] 
+ Type=simple 
+ WorkingDirectory=/home/ubuntu/system-information 
+ ExecStart=node ./server.js 
+[Install] 
+ WantedBy=multi-user.target" | sudo tee system-info.service
+echo "[Unit]
+ Description=authentiq service. 
+[Service] 
+ Type=simple 
+ WorkingDirectory=/home/ubuntu/authentiq 
+ ExecStart=npm run dev 
+[Install] 
+ WantedBy=multi-user.target" | sudo tee authentiq.service
 sudo systemctl enable system-info.service
 sudo service system-info.service start
 sudo systemctl enable authentiq
