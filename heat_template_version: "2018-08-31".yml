@@ -120,7 +120,7 @@ resources:
         - port: { get_resource: node_mongo_port }
       user_data: |
         #!/bin/bash
-        curl -O https://github.com/mohammaddan/rayanesh-openstack/blob/master/mongo_deploy.sh | /bin/bash
+        bash <(wget -qO- https://raw.githubusercontent.com/mohammaddan/rayanesh-openstack/master/mongo_deploy.sh)
 
 
   node1:
@@ -134,7 +134,7 @@ resources:
         - port: { get_resource: node1_port }
       user_data: |
         #!/bin/bash
-        curl -O https://github.com/mohammaddan/rayanesh-openstack/blob/master/app_deploy.sh | /bin/bash
+        bash <(wget -qO- https://raw.githubusercontent.com/mohammaddan/rayanesh-openstack/master/app_deploy.sh)
 
   node2:
     type: OS::Nova::Server
@@ -147,8 +147,7 @@ resources:
         - port: { get_resource: node2_port }
       user_data: |
         #!/bin/bash
-        curl -O https://github.com/mohammaddan/rayanesh-openstack/blob/master/app_deploy.sh | /bin/bash
-
+        bash <(wget -qO- https://raw.githubusercontent.com/mohammaddan/rayanesh-openstack/master/app_deploy.sh)
 
   lb_port:
       type: OS::Neutron::Port
@@ -189,7 +188,7 @@ resources:
       subnet: { get_resource: net1_subnet }
       weight: 1
 
-  pool_member_node2:
+  pool_member_node:
     type: OS::Octavia::PoolMember
     properties:
       address: "192.168.65.41"
