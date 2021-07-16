@@ -106,6 +106,9 @@ resources:
       flavor: db-flavor
       networks:
         - port: { get_resource: node_mongo_port }
+      user_data: |
+        #!/bin/bash
+        curl -O https://github.com/mohammaddan/rayanesh-openstack/blob/master/mongo_deploy.sh | /bin/bash
 
 
   node1:
@@ -117,6 +120,9 @@ resources:
       flavor: app-flavor
       networks:
         - port: { get_resource: node1_port }
+      user_data: |
+        #!/bin/bash
+        curl -O https://github.com/mohammaddan/rayanesh-openstack/blob/master/app_deploy.sh | /bin/bash
 
   node2:
     type: OS::Nova::Server
@@ -127,6 +133,9 @@ resources:
       flavor: app-flavor
       networks:
         - port: { get_resource: node2_port }
+      user_data: |
+        #!/bin/bash
+        curl -O https://github.com/mohammaddan/rayanesh-openstack/blob/master/app_deploy.sh | /bin/bash
 
 
   lb_port:
@@ -147,7 +156,7 @@ resources:
     type: OS::Neutron::FloatingIPAssociation
     properties:
       floatingip_id: { get_resource: lb_floating_ip }
-      port_id: { get_attr: [ pool ] }
+      port_id: { get_resource: lb_floating_ip }
 
   monitor:
     type: OS::Octavia::HealthMonitor
