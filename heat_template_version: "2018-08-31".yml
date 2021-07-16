@@ -149,7 +149,6 @@ resources:
       name: node2
       image: { get_param: image_id }
       flavor: { get_param: flavor_id_app }
-      key_name: { get_param: key_name }
       networks:
         - port: { get_resource: node2_port }
       user_data: |
