@@ -1,6 +1,6 @@
 #!/bin/bash
 sudo apt update
-sudo apt install mongodb -y
+sudo apt --assume-yes install mongodb
 
 mongo <<EOF
 use authentiq
