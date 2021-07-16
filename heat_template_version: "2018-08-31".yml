@@ -5,6 +5,18 @@ parameters:
     type: string
     description: base image name
     default: "Ubuntu-20.04"
+  flavor_id_app:
+    type: string
+    description: flavor name or id for apps
+    default: "app-flavor"
+  flavor_id_db:
+    type: string
+    description: flavor name or id for mongodb
+    default: "db-flavor"
+  key_name:
+    type: string
+    label: Key Name
+    description: Name of key-pair to be used for compute instance
 
 resources:
   net1:
@@ -103,7 +115,8 @@ resources:
       name: node-mongo
       # security_groups: [{ get_resource: mongo_security_group }]
       image: { get_param: image_id }
-      flavor: db-flavor
+      flavor: { get_param: flavor_id_db }
+      key_name: { get_param: key_name }
       networks:
         - port: { get_resource: node_mongo_port }
       user_data: |
@@ -117,7 +130,8 @@ resources:
       name: node1
       # security_groups: [{ get_resource: app_security_group }]
       image: { get_param: image_id }
-      flavor: app-flavor
+      flavor: { get_param: flavor_id_app }
+      key_name: { get_param: key_name }
       networks:
         - port: { get_resource: node1_port }
       user_data: |
@@ -130,7 +144,8 @@ resources:
       name: node2
       # security_groups: [{ get_resource: app_security_group }]
       image: { get_param: image_id }
-      flavor: app-flavor
+      flavor: { get_param: flavor_id_app }
+      key_name: { get_param: key_name }
       networks:
         - port: { get_resource: node2_port }
       user_data: |
