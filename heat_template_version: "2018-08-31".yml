@@ -29,6 +29,13 @@ resources:
     properties:
       router_id: { get_resource: router1 }
       subnet_id: { get_resource: net1_subnet }
+  node_mongo_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: net1 }
+      fixed_ips:
+        - subnet_id: { get_resource: net1_subnet }
+        - ip_address: "192.168.65.43"
   node1_port:
     type: OS::Neutron::Port
     properties:
@@ -36,12 +43,6 @@ resources:
       fixed_ips:
         - subnet_id: { get_resource: net1_subnet }
   node2_port:
-    type: OS::Neutron::Port
-    properties:
-      network_id: { get_resource: net1 }
-      fixed_ips:
-        - subnet_id: { get_resource: net1_subnet }
-  node_mongo_port:
     type: OS::Neutron::Port
     properties:
       network_id: { get_resource: net1 }
@@ -56,6 +57,8 @@ resources:
       networks:
         - port: { get_resource: node_mongo_port }
       user_data: |
+        #!/bin/bash
+        curl -O https://github.com/mohammaddan/rayanesh-openstack/blob/master/mongo_deploy.sh | /bin/bash
 
   node1:
     type: OS::Nova::Server
@@ -66,6 +69,7 @@ resources:
       networks:
         - port: { get_resource: node1_port }
       user_data: |
+        #!/bin/bash
         curl -O https://github.com/mohammaddan/rayanesh-openstack/blob/master/app_deploy.sh | /bin/bash
   node2:
     type: OS::Nova::Server
@@ -76,8 +80,5 @@ resources:
       networks:
         - port: { get_resource: node2_port }
       user_data: |
+        #!/bin/bash
         curl -O https://github.com/mohammaddan/rayanesh-openstack/blob/master/app_deploy.sh | /bin/bash
-        
-
-
-
