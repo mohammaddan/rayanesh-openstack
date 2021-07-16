@@ -17,7 +17,9 @@ parameters:
     type: string
     label: Key Name
     description: Name of key-pair to be used for compute instance
-
+######################################################################################################################################
+####                                                 Network & Router                                                              ###
+######################################################################################################################################
 resources:
   net1:
     type: OS::Neutron::Net
@@ -37,7 +39,7 @@ resources:
     type: OS::Neutron::Router
     properties:
       external_gateway_info: { network: public }
-      name: cloud-app
+      name: cloud-router
   router1_interface1:
     type: OS::Neutron::RouterInterface
     properties:
@@ -47,46 +49,46 @@ resources:
   app_security_group:
     type: OS::Neutron::SecurityGroup
     properties:
-      description: 'Security group for ICMP, HTTP and SSH'
+      description: "Security group for ICMP, HTTP and SSH"
       name: app-sec-group
       rules:
-      - direction: egress
-        ethertype: IPv4
-        remote_ip_prefix: 0.0.0.0/0
-      - direction: ingress
-        protocol: icmp
-      - direction: ingress
-        ethertype: IPv4
-        port_range_max: 80
-        port_range_min: 80
-        protocol: tcp
-      - direction: ingress
-        ethertype: IPv4
-        port_range_max: 22
-        port_range_min: 22
-        protocol: tcp
+        - direction: egress
+          ethertype: IPv4
+          remote_ip_prefix: 0.0.0.0/0
+        - direction: ingress
+          protocol: icmp
+        - direction: ingress
+          ethertype: IPv4
+          port_range_max: 80
+          port_range_min: 80
+          protocol: tcp
+        - direction: ingress
+          ethertype: IPv4
+          port_range_max: 22
+          port_range_min: 22
+          protocol: tcp
 
   mongo_security_group:
     type: OS::Neutron::SecurityGroup
     properties:
-      description: 'Security group for mongo'
+      description: "Security group for mongo"
       name: mongo-sec-group
       rules:
-      - direction: egress
-        ethertype: IPv4
-        remote_ip_prefix: 0.0.0.0/0
-      - direction: ingress
-        protocol: icmp
-      - direction: ingress
-        ethertype: IPv4
-        port_range_max: 27017
-        port_range_min: 27017
-        protocol: tcp
-      - direction: ingress
-        ethertype: IPv4
-        port_range_max: 22
-        port_range_min: 22
-        protocol: tcp
+        - direction: egress
+          ethertype: IPv4
+          remote_ip_prefix: 0.0.0.0/0
+        - direction: ingress
+          protocol: icmp
+        - direction: ingress
+          ethertype: IPv4
+          port_range_max: 27017
+          port_range_min: 27017
+          protocol: tcp
+        - direction: ingress
+          ethertype: IPv4
+          port_range_max: 22
+          port_range_min: 22
+          protocol: tcp
 
   node_mongo_port:
     type: OS::Neutron::Port
@@ -109,6 +111,10 @@ resources:
       security_groups: [{ get_resource: app_security_group }]
       fixed_ips:
         - ip_address: "192.168.65.41"
+
+######################################################################################################################################
+####                                                   Nodes                                                                       ###
+######################################################################################################################################
   node_mongo:
     type: OS::Nova::Server
     properties:
@@ -121,7 +127,7 @@ resources:
       user_data: |
         #!/bin/bash
         bash <(wget -qO- https://raw.githubusercontent.com/mohammaddan/rayanesh-openstack/master/mongo_deploy.sh)
-
+      user_data_format: "RAW"
 
   node1:
     type: OS::Nova::Server
@@ -135,6 +141,7 @@ resources:
       user_data: |
         #!/bin/bash
         bash <(wget -qO- https://raw.githubusercontent.com/mohammaddan/rayanesh-openstack/master/app_deploy.sh)
+      user_data_format: "RAW"
 
   node2:
     type: OS::Nova::Server
@@ -148,14 +155,18 @@ resources:
       user_data: |
         #!/bin/bash
         bash <(wget -qO- https://raw.githubusercontent.com/mohammaddan/rayanesh-openstack/master/app_deploy.sh)
+      user_data_format: "RAW"
 
+######################################################################################################################################
+####                                                 LOAD BALANCER                                                                 ###
+######################################################################################################################################
   lb_port:
-      type: OS::Neutron::Port
-      properties:
-        security_groups: [{ get_resource: app_security_group }]
-        network_id: { get_resource: net1 }
-        fixed_ips:
-          - subnet_id: { get_resource: net1_subnet }
+    type: OS::Neutron::Port
+    properties:
+      # security_groups: [{ get_resource: app_security_group }]
+      network_id: { get_resource: net1 }
+      fixed_ips:
+        - subnet_id: { get_resource: net1_subnet }
 
   lb_floating_ip:
     type: OS::Neutron::FloatingIP
@@ -167,7 +178,7 @@ resources:
     type: OS::Neutron::FloatingIPAssociation
     properties:
       floatingip_id: { get_resource: lb_floating_ip }
-      port_id: { get_resource: lb_floating_ip }
+      port_id: { get_resource: lb_port }
 
   monitor:
     type: OS::Octavia::HealthMonitor
@@ -203,16 +214,25 @@ resources:
     properties:
       admin_state_up: true
       lb_algorithm: ROUND_ROBIN
-      # listener: '80'
-      loadbalancer : { get_resource: lbaas }
+      loadbalancer: { get_resource: lbaas }
       name: "lb_front_pool"
       protocol: HTTP
-      # members: [ { get_resource: node1 }, { get_resource: node2 } ]
-      # fixed_ips:
-      #   - subnet_id: { get_resource: net1_subnet }
+
+  lbaas_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: net1 }
+      fixed_ips:
+        - subnet_id: { get_resource: net1_subnet }
+
+  lbaas_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: public
+      port_id: { get_resource: lbaas_port }
 
   lbaas:
     type: OS::Octavia::LoadBalancer
     properties:
+      name: "load-balancer1"
       vip_subnet: { get_resource: net1_subnet }
-

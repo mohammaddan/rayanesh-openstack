@@ -1,6 +1,7 @@
 #!/bin/bash
 sudo apt update
 sudo apt --assume-yes install nodejs npm apache2
+cd /home/ubuntu
 git clone https://github.com/MohammadMRD/system-information.git
 git clone https://github.com/SayidHosseini/authentiq.git
 cd system-information
