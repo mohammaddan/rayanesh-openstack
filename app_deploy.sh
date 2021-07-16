@@ -9,7 +9,7 @@ cd ../authentiq
 sed 's/authentiq-db/192.168.65.43/g' config/config.json
 npm i
 cd /etc/apache2/sites-available
-echo "<VirtualHost *:80>
+sudo echo "<VirtualHost *:80>
 ServerAdmin info@fumcloud.pro
 ServerName fumcloud.pro 
 ProxyRequests Off 
@@ -19,7 +19,7 @@ ProxyRequests Off
   ProxyPassReverse http://127.0.0.1:3000/ 
 </Location> 
 </VirtualHost>" | sudo tee fumcloud.pro.conf
-echo "<VirtualHost *:80>
+sudo echo "<VirtualHost *:80>
 ServerAdmin info@api.fumcloud.pro 
 ServerName api.fumcloud.pro 
 ProxyRequests Off 
@@ -36,7 +36,7 @@ sudo a2ensite api.fumcloud.pro.conf
 sudo service apache2 restart
 
 cd /etc/systemd/system
-echo "[Unit]
+sudo echo "[Unit]
  Description=system-info service. 
 [Service] 
  Type=simple 
@@ -44,7 +44,7 @@ echo "[Unit]
  ExecStart=node ./server.js 
 [Install] 
  WantedBy=multi-user.target" | sudo tee system-info.service
-echo "[Unit]
+sudo echo "[Unit]
  Description=authentiq service. 
 [Service] 
  Type=simple 
@@ -52,7 +52,7 @@ echo "[Unit]
  ExecStart=npm run dev 
 [Install] 
  WantedBy=multi-user.target" | sudo tee authentiq.service
-sudo systemctl enable system-info.service
-sudo service system-info.service start
+sudo systemctl enable system-info
+sudo service system-info start
 sudo systemctl enable authentiq
-sudo service authentiq.service start
+sudo service authentiq start
