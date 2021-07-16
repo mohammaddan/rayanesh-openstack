@@ -19,6 +19,7 @@ resources:
       dns_nameservers: ["8.8.8.8"]
       gateway_ip: "192.168.65.1"
       ip_version: 4
+
   router1:
     type: OS::Neutron::Router
     properties:
@@ -29,6 +30,51 @@ resources:
     properties:
       router_id: { get_resource: router1 }
       subnet_id: { get_resource: net1_subnet }
+
+  app_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: 'Security group for ICMP, HTTP and SSH'
+      name: app-sec-group
+      rules:
+      - direction: egress
+        ethertype: IPv4
+        remote_ip_prefix: 0.0.0.0/0
+      - direction: ingress
+        protocol: icmp
+      - direction: ingress
+        ethertype: IPv4
+        port_range_max: 80
+        port_range_min: 80
+        protocol: tcp
+      - direction: ingress
+        ethertype: IPv4
+        port_range_max: 22
+        port_range_min: 22
+        protocol: tcp
+
+  mongo_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: 'Security group for mongo'
+      name: mongo-sec-group
+      rules:
+      - direction: egress
+        ethertype: IPv4
+        remote_ip_prefix: 0.0.0.0/0
+      - direction: ingress
+        protocol: icmp
+      - direction: ingress
+        ethertype: IPv4
+        port_range_max: 27017
+        port_range_min: 27017
+        protocol: tcp
+      - direction: ingress
+        ethertype: IPv4
+        port_range_max: 22
+        port_range_min: 22
+        protocol: tcp
+
   node_mongo_port:
     type: OS::Neutron::Port
     properties:
@@ -52,6 +98,7 @@ resources:
     type: OS::Nova::Server
     properties:
       name: node-mongo
+      security_groups: [{ get_resource: mongo_security_group }]
       image: { get_param: image_id }
       flavor: db-flavor
       networks:
@@ -64,6 +111,7 @@ resources:
     type: OS::Nova::Server
     properties:
       name: node1
+      security_groups: [{ get_resource: app_security_group }]
       image: { get_param: image_id }
       flavor: app-flavor
       networks:
@@ -75,6 +123,7 @@ resources:
     type: OS::Nova::Server
     properties:
       name: node2
+      security_groups: [{ get_resource: app_security_group }]
       image: { get_param: image_id }
       flavor: app-flavor
       networks:
@@ -82,3 +131,52 @@ resources:
       user_data: |
         #!/bin/bash
         curl -O https://github.com/mohammaddan/rayanesh-openstack/blob/master/app_deploy.sh | /bin/bash
+
+lb_port:
+    type: OS::Neutron::Port
+    properties:
+      security_groups: [{ get_resource: app_security_group }]
+      network_id: { get_resource: net1 }
+      fixed_ips:
+        - subnet_id: { get_resource: net1_subnet }
+
+  lb_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: { get_param: public }
+      port_id: { get_resource: lb_port }
+
+  lb_pool:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floatingip_id: { get_resource: lb_floating_ip }
+      port_id: { get_attr: [ pool, vip, port_id ] }
+
+  monitor:
+    type: OS::Neutron::HealthMonitor
+    properties:
+      type: PING
+      delay: 15
+      max_retries: 5
+      timeout: 10
+
+  pool:
+    type: OS::Neutron::Pool
+    properties:
+      name: lb_front_pool
+      protocol: HTTP
+      subnet_id: { get_resource: net1_subnet }
+      lb_method: ROUND_ROBIN
+      monitors: [ { get_resource: monitor } ]
+      vip:
+        name: front
+        description: Front-end virtual IP (VIP)
+        protocol_port: 80
+
+  lbaas:
+    type: OS::Neutron::LoadBalancer
+    properties:
+      members: [ { get_resource: node1 }, { get_resource: node2 } ]
+      pool_id: { get_resource: pool }
+      protocol_port: 80
+
