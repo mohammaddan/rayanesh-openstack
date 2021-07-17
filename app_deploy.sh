@@ -7,7 +7,7 @@ git clone https://github.com/SayidHosseini/authentiq.git
 cd system-information
 npm i
 cd ../authentiq
-sed 's/authentiq-db/192.168.65.43/g' config/config.json
+sed 's/authentiq-db/192.168.65.53/g' config/config.json
 npm i
 cd /etc/apache2/sites-available
 sudo echo "<VirtualHost *:80>

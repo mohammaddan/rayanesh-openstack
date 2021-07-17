@@ -13,5 +13,5 @@ db.createUser(
 )
 EOF
 
-sudo mongod --bind_ip 192.168.65.43
+sudo mongod --bind_ip 192.168.65.53
 sudo service mongodb restart

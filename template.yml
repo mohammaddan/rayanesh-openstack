@@ -96,25 +96,46 @@ resources:
       security_groups: [{ get_resource: mongo_security_group }]
       network_id: { get_resource: net1 }
       fixed_ips:
-        - ip_address: "192.168.65.43"
+        - ip_address: "192.168.65.53"
   node1_port:
     type: OS::Neutron::Port
     properties:
       network_id: { get_resource: net1 }
       security_groups: [{ get_resource: app_security_group }]
       fixed_ips:
-        - ip_address: "192.168.65.42"
+        - ip_address: "192.168.65.52"
   node2_port:
     type: OS::Neutron::Port
     properties:
       network_id: { get_resource: net1 }
       security_groups: [{ get_resource: app_security_group }]
       fixed_ips:
-        - ip_address: "192.168.65.41"
+        - ip_address: "192.168.65.51"
 
 ######################################################################################################################################
 ####                                                   Nodes                                                                       ###
 ######################################################################################################################################
+  root_config_01:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      config:
+        str_replace:
+          params:
+             $NODENAME: '1111'
+          template: |
+            #!/bin/bash
+            bash <(wget -qO- https://raw.githubusercontent.com/mohammaddan/rayanesh-openstack/master/mongo_deploy.sh)
+  root_config_02:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      config:
+        str_replace:
+          params:
+             $NODENAME: '1111'
+          template: |
+            #!/bin/bash
+            bash <(wget -qO- https://raw.githubusercontent.com/mohammaddan/rayanesh-openstack/master/app_deploy.sh)
+
   node_mongo:
     type: OS::Nova::Server
     properties:
@@ -124,10 +145,8 @@ resources:
       key_name: { get_param: key_name }
       networks:
         - port: { get_resource: node_mongo_port }
-      user_data: |
-        #!/bin/bash
-        bash <(wget -qO- https://raw.githubusercontent.com/mohammaddan/rayanesh-openstack/master/mongo_deploy.sh)
-      user_data_format: RAW
+      user_data_format: SOFTWARE_CONFIG
+      user_data: {get_resource: root_config_01}
 
   node1:
     type: OS::Nova::Server
@@ -138,10 +157,8 @@ resources:
       key_name: { get_param: key_name }
       networks:
         - port: { get_resource: node1_port }
-      user_data_format: RAW
-      user_data: |
-        #!/bin/bash
-        bash <(wget -qO- https://raw.githubusercontent.com/mohammaddan/rayanesh-openstack/master/app_deploy.sh)
+      user_data_format: SOFTWARE_CONFIG
+      user_data: {get_resource: root_config_02}
 
   node2:
     type: OS::Nova::Server
@@ -151,10 +168,8 @@ resources:
       flavor: { get_param: flavor_id_app }
       networks:
         - port: { get_resource: node2_port }
-      user_data_format: RAW
-      user_data: |
-        #!/bin/bash
-        bash <(wget -qO- https://raw.githubusercontent.com/mohammaddan/rayanesh-openstack/master/app_deploy.sh)
+      user_data_format: SOFTWARE_CONFIG
+      user_data: {get_resource: root_config_02}
 
 ######################################################################################################################################
 ####                                                 LOAD BALANCER                                                                 ###
@@ -191,7 +206,7 @@ resources:
   pool_member_node1:
     type: OS::Octavia::PoolMember
     properties:
-      address: "192.168.65.42"
+      address: "192.168.65.52"
       admin_state_up: true
       pool: { get_resource: pool }
       protocol_port: 80
@@ -201,7 +216,7 @@ resources:
   pool_member_node:
     type: OS::Octavia::PoolMember
     properties:
-      address: "192.168.65.41"
+      address: "192.168.65.51"
       admin_state_up: true
       pool: { get_resource: pool }
       protocol_port: 80
