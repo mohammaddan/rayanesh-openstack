@@ -52,21 +52,21 @@ resources:
       description: "Security group for ICMP, HTTP and SSH"
       name: app-sec-group
       rules:
-        - direction: egress
-          ethertype: IPv4
-          remote_ip_prefix: 0.0.0.0/0
-        - direction: ingress
-          protocol: icmp
-        - direction: ingress
-          ethertype: IPv4
-          port_range_max: 80
-          port_range_min: 80
-          protocol: tcp
-        - direction: ingress
-          ethertype: IPv4
-          port_range_max: 22
-          port_range_min: 22
-          protocol: tcp
+      - direction: egress
+        ethertype: IPv4
+        remote_ip_prefix: 0.0.0.0/0
+      - direction: ingress
+        protocol: icmp
+      - direction: ingress
+        ethertype: IPv4
+        port_range_max: 80
+        port_range_min: 80
+        protocol: tcp
+      - direction: ingress
+        ethertype: IPv4
+        port_range_max: 22
+        port_range_min: 22
+        protocol: tcp
 
   mongo_security_group:
     type: OS::Neutron::SecurityGroup
@@ -74,21 +74,21 @@ resources:
       description: "Security group for mongo"
       name: mongo-sec-group
       rules:
-        - direction: egress
-          ethertype: IPv4
-          remote_ip_prefix: 0.0.0.0/0
-        - direction: ingress
-          protocol: icmp
-        - direction: ingress
-          ethertype: IPv4
-          port_range_max: 27017
-          port_range_min: 27017
-          protocol: tcp
-        - direction: ingress
-          ethertype: IPv4
-          port_range_max: 22
-          port_range_min: 22
-          protocol: tcp
+      - direction: egress
+        ethertype: IPv4
+        remote_ip_prefix: 0.0.0.0/0
+      - direction: ingress
+        protocol: icmp
+      - direction: ingress
+        ethertype: IPv4
+        port_range_max: 27017
+        port_range_min: 27017
+        protocol: tcp
+      - direction: ingress
+        ethertype: IPv4
+        port_range_max: 22
+        port_range_min: 22
+        protocol: tcp
 
   node_mongo_port:
     type: OS::Neutron::Port
@@ -139,11 +139,9 @@ resources:
       networks:
         - port: { get_resource: node1_port }
       user_data_format: RAW
-      user_data:
-        str_replace:
-          template: |
-            #!/bin/bash
-            bash <(wget -qO- https://raw.githubusercontent.com/mohammaddan/rayanesh-openstack/master/app_deploy.sh)
+      user_data: |
+        #!/bin/bash
+        bash <(wget -qO- https://raw.githubusercontent.com/mohammaddan/rayanesh-openstack/master/app_deploy.sh)
 
   node2:
     type: OS::Nova::Server
@@ -154,11 +152,9 @@ resources:
       networks:
         - port: { get_resource: node2_port }
       user_data_format: RAW
-      user_data:
-        str_replace:
-          template: |
-            #!/bin/bash
-            bash <(wget -qO- https://raw.githubusercontent.com/mohammaddan/rayanesh-openstack/master/app_deploy.sh)
+      user_data: |
+        #!/bin/bash
+        bash <(wget -qO- https://raw.githubusercontent.com/mohammaddan/rayanesh-openstack/master/app_deploy.sh)
 
 ######################################################################################################################################
 ####                                                 LOAD BALANCER                                                                 ###
