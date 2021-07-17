@@ -16,6 +16,7 @@ parameters:
   key_name:
     type: string
     label: Key Name
+    default: "iranserver"
     description: Name of key-pair to be used for compute instance
 ######################################################################################################################################
 ####                                                 Network & Router                                                              ###
@@ -103,14 +104,16 @@ resources:
       network_id: { get_resource: net1 }
       security_groups: [{ get_resource: app_security_group }]
       fixed_ips:
-        - ip_address: "192.168.65.52"
+        - subnet_id: { get_resource: net1_subnet }
+        # - ip_address: "192.168.65.52"
   node2_port:
     type: OS::Neutron::Port
     properties:
       network_id: { get_resource: net1 }
       security_groups: [{ get_resource: app_security_group }]
       fixed_ips:
-        - ip_address: "192.168.65.51"
+        - subnet_id: { get_resource: net1_subnet }
+        # - ip_address: "192.168.65.51"
 
 ######################################################################################################################################
 ####                                                   Nodes                                                                       ###
@@ -206,7 +209,7 @@ resources:
   pool_member_node1:
     type: OS::Octavia::PoolMember
     properties:
-      address: "192.168.65.52"
+      address: { get_attr: [ node1, first_address ]}
       admin_state_up: true
       pool: { get_resource: pool }
       protocol_port: 80
@@ -216,7 +219,7 @@ resources:
   pool_member_node:
     type: OS::Octavia::PoolMember
     properties:
-      address: "192.168.65.51"
+      address: { get_attr: [ node2, first_address ]}
       admin_state_up: true
       pool: { get_resource: pool }
       protocol_port: 80
